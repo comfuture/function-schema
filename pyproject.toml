@@ -16,12 +16,10 @@ classifiers = [
   "Development Status :: 3 - Alpha",
   "Programming Language :: Python :: 3.9",
 ]
-dynamic = ["version"]
+dynamic = ["optional-dependencies"]
 
-[project.optional-depencencies]
-test = [
-  "pytest",
-]
+[tool.setuptools.dynamic]
+optional-dependencies.test = {file = ["pytest"]}
 
 [project.urls]
 Homepage = "https://github.com/comfuture/function-schema"
