@@ -1,0 +1,35 @@
+[project]
+name = "function-schema"
+version = "0.1.0"
+requires-python = ">= 3.9"
+description = "A small utility to generate JSON schemas for python functions."
+readme = "README.md"
+license = {text = "MIT License"}
+authors = [
+  {name = "Changkyun Kim", email = "comfuture@gmail.com"}
+]
+maintainers = [
+  {name = "Changkyun Kim", email = "comfuture@gmail.com"}
+]
+keywords = ["json-schema", "function", "documentation", "openai", "utility"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Programming Language :: Python :: 3.9",
+]
+dynamic = ["version"]
+
+[project.optional-depencencies]
+test = [
+  "pytest",
+]
+
+[project.urls]
+Homepage = "https://github.com/comfuture/function-schema"
+Repository = "https://github.com/comfuture/function-schema"
+
+[project.scripts]
+function_schema = "function_schema.cli:main"
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
