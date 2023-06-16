@@ -1,5 +1,7 @@
 # Function schema
 
+[![PyPI version](https://badge.fury.io/py/function-schema.svg)](https://badge.fury.io/py/function-schema)
+
 This is a small utility to generate JSON schemas for python functions.
 With power of type annotations, it is possible to generate a schema for a function without describing it twice.
 
