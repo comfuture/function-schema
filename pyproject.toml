@@ -1,6 +1,6 @@
 [project]
 name = "function-schema"
-version = "0.1.0"
+version = "0.1.1"
 requires-python = ">= 3.9"
 description = "A small utility to generate JSON schemas for python functions."
 readme = "README.md"
@@ -16,10 +16,9 @@ classifiers = [
   "Development Status :: 3 - Alpha",
   "Programming Language :: Python :: 3.9",
 ]
-dynamic = ["optional-dependencies"]
 
-[tool.setuptools.dynamic]
-optional-dependencies.test = {file = ["pytest"]}
+[project.optional-dependencies]
+test = ["pytest"]
 
 [project.urls]
 Homepage = "https://github.com/comfuture/function-schema"
@@ -29,5 +28,5 @@ Repository = "https://github.com/comfuture/function-schema"
 function_schema = "function_schema.cli:main"
 
 [build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["flit_core >=3.9,<4"]
+build-backend = "flit_core.buildapi"
