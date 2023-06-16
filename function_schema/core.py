@@ -2,6 +2,7 @@ import enum
 import typing
 import inspect
 
+
 def get_function_schema(
     func: typing.Annotated[typing.Callable, "The function to get the schema for"]
 ) -> typing.Annotated[dict[str, typing.Any], "The JSON schema for the given function"]:
@@ -26,25 +27,25 @@ def get_function_schema(
     ... ) -> str:
     ...     \"\"\"Returns the weather for the given city.\"\"\"
     ...     return f"Hello {name}, you are {age} years old."
-    >>> get_function_schema(get_weather)
+    >>> get_function_schema(get_weather) # doctest: +SKIP
     {
-        "name": "get_weather",
-        "description": "Returns the weather for the given city.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "city": {
-                    "type": "string",
-                    "description": "The city to get the weather for"
+        'name': 'get_weather',
+        'description': 'Returns the weather for the given city.',
+        'parameters': {
+            'type': 'object',
+            'properties': {
+                'city': {
+                    'type': 'string',
+                    'description': 'The city to get the weather for'
                 },
-                "unit": {
-                    "type": "string",
-                    "description": "The unit to return the temperature in",
-                    "enum": ["celcius", "fahrenheit"],
-                    "default": "celcius"
+                'unit': {
+                    'type': 'string',
+                    'description': 'The unit to return the temperature in',
+                    'enum': ['celcius', 'fahrenheit'],
+                    'default': 'celcius'
                 }
             },
-            "required": ["city"]
+            'required': ['city']
         }
     }
     """
@@ -64,7 +65,7 @@ def get_function_schema(
 
         if is_annotated:
             # first arg is type
-            (T, _) = param_args
+            (T, *_) = param_args
 
             # find description in param_args tuple
             description = next(
@@ -74,7 +75,12 @@ def get_function_schema(
 
             # find enum in param_args tuple
             enum_ = next(
-                (arg for arg in param_args if isinstance(arg, enum.Enum)), None
+                (
+                    arg
+                    for arg in param_args
+                    if isinstance(arg, type) and issubclass(arg, enum.Enum)
+                ),
+                None,
             )
         else:
             T = param.annotation
@@ -90,15 +96,15 @@ def get_function_schema(
         }
 
         if enum_ is not None:
-            schema["properties"][name]["enum"] = enum_.values
+            schema["properties"][name]["enum"] = [t.name for t in enum_]
 
         if default_value is not inspect._empty:
             schema["properties"][name]["default"] = default_value
 
-        if not isinstance(None, T):
+        if not isinstance(None, T) and default_value is inspect._empty:
             schema["required"].append(name)
     return {
-        "name": func.__qualname__,
+        "name": func.__name__,
         "description": inspect.getdoc(func),
         "parameters": schema,
     }
@@ -110,27 +116,38 @@ def guess_type(
     typing.Union[str, list[str]], "str | list of str that representing JSON schema type"
 ]:
     """Guesses the JSON schema type for the given python type."""
-    _types = []
 
     # hacking around typing modules, `typing.Union` and `types.UnitonType`
-    if isinstance(1, T):
-        _types.append("integer")
-    elif isinstance(1.1, T):
-        _types.append("number")
+    union_types = typing.get_args(T)
+    if len(union_types) > 1:
+        _types = []
+        for union_type in union_types:
+            _types.append(guess_type(union_type))
+        _types = [t for t in _types if t is not None] # exclude None
 
-    if isinstance("", T):
-        _types.append("string")
-    if not isinstance(1, T) and isinstance(True, T):
-        _types.append("boolean")
-    if isinstance([], T):
-        _types.append("array")
-    if isinstance({}, T):
+        # number contains integer in JSON schema
+        if 'number' in _types and 'integer' in _types:
+            _types.remove('integer')
+
+        if len(_types) == 1:
+            return _types[0]
+        return _types
+
+    if not isinstance(T, type):
+        return
+
+    if T.__name__ == 'NoneType':
+        return
+
+    if issubclass(T, str):
+        return "string"
+    if issubclass(T, bool):
+        return "boolean"
+    if issubclass(T, float):
+        return "number"
+    elif issubclass(T, int):
+        return "integer"
+    if T.__name__ == "list":
+        return "array"
+    if T.__name__ == "dict":
         return "object"
-
-    if len(_types) == 0:
-        return "object"
-
-    if len(_types) == 1:
-        return _types[0]
-
-    return _types

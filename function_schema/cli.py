@@ -2,7 +2,7 @@ import sys
 from importlib.util import module_from_spec, spec_from_file_location
 import inspect
 import json
-from core import get_function_schema
+from .core import get_function_schema
 
 
 def print_usage():
