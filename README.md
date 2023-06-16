@@ -1,5 +1,7 @@
 # Function schema
 
+[![CI](https://github.com/comfuture/function-schema/actions/workflows/ci.yml/badge.svg)](https://github.com/comfuture/function-schema/actions/workflows/ci.yml)
+[![Release](https://github.com/comfuture/function-schema/actions/workflows/python-publish.yml/badge.svg)](https://github.com/comfuture/function-schema/actions/workflows/python-publish.yml)
 [![PyPI version](https://badge.fury.io/py/function-schema.svg)](https://badge.fury.io/py/function-schema)
 
 This is a small utility to generate JSON schemas for python functions.
