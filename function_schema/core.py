@@ -3,8 +3,16 @@ import typing
 import inspect
 
 
+class SchemaFormat(str, enum.Enum):
+    openai = "openai"
+    claude = "claude"
+
+
 def get_function_schema(
-    func: typing.Annotated[typing.Callable, "The function to get the schema for"]
+    func: typing.Annotated[typing.Callable, "The function to get the schema for"],
+    format: typing.Annotated[
+        typing.Optional[str], SchemaFormat, "The format of the schema to return"
+    ] = SchemaFormat.openai,
 ) -> typing.Annotated[dict[str, typing.Any], "The JSON schema for the given function"]:
     """
     Returns a JSON schema for the given function.
@@ -103,15 +111,18 @@ def get_function_schema(
 
         if not isinstance(None, T) and default_value is inspect._empty:
             schema["required"].append(name)
+
+    parms_key = "input_schema" if format == "claude" else "parameters"
+
     return {
         "name": func.__name__,
         "description": inspect.getdoc(func),
-        "parameters": schema,
+        parms_key: schema,
     }
 
 
 def guess_type(
-    T: typing.Annotated[type, "The type to guess the JSON schema type for"]
+    T: typing.Annotated[type, "The type to guess the JSON schema type for"],
 ) -> typing.Annotated[
     typing.Union[str, list[str]], "str | list of str that representing JSON schema type"
 ]:
@@ -123,11 +134,11 @@ def guess_type(
         _types = []
         for union_type in union_types:
             _types.append(guess_type(union_type))
-        _types = [t for t in _types if t is not None] # exclude None
+        _types = [t for t in _types if t is not None]  # exclude None
 
         # number contains integer in JSON schema
-        if 'number' in _types and 'integer' in _types:
-            _types.remove('integer')
+        if "number" in _types and "integer" in _types:
+            _types.remove("integer")
 
         if len(_types) == 1:
             return _types[0]
@@ -136,7 +147,7 @@ def guess_type(
     if not isinstance(T, type):
         return
 
-    if T.__name__ == 'NoneType':
+    if T.__name__ == "NoneType":
         return
 
     if issubclass(T, str):

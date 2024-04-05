@@ -7,8 +7,8 @@
 This is a small utility to generate JSON schemas for python functions.
 With power of type annotations, it is possible to generate a schema for a function without describing it twice.
 
-At this moment, extracting schema from a function is only useful for [OpenAI API function-call](https://platform.openai.com/docs/guides/gpt/function-calling) feature.
-But it can be used for other purposes for example to generate documentation in the future.
+At this moment, extracting schema from a function is useful for [OpenAI Assistant Toll Calling](https://platform.openai.com/docs/assistants/tools/function-calling), [OpenAI API function-call](https://platform.openai.com/docs/guides/function-calling), and [Anthropic Claude Toll calling](https://docs.anthropic.com/claude/docs/tool-use) feature.
+And it can be used for other purposes for example to generate documentation in the future.
 
 ## Installation
 
@@ -79,20 +79,64 @@ Will output:
 }
 ```
 
+for claude, you should pass 2nd argument as SchemaFormat.claude or `claude`:
+
+```python
+from function_schema import get_function_schema
+
+schema = get_function_schema(get_weather, "claude")
+```
+
+Please refer to the [Claude tool use](https://docs.anthropic.com/claude/docs/tool-use) documentation for more information.
+
 You can use this schema to make a function call in OpenAI API:
 ```python
 import openai
 openai.api_key = "sk-..."
 
-result = openai.ChatCompletion.create(
+# Create an assistant with the function
+assistant = client.beta.assistants.create(
+    instructions="You are a weather bot. Use the provided functions to answer questions.",
+    model="gpt-4-turbo-preview",
+    tools=[{
+        "type": "function",
+        "function": get_function_schema(get_weather),
+    }]
+)
+
+run = client.beta.messages.create(
+    assistant_id=assistant.id,
+    messages=[
+        {"role": "user", "content": "What's the weather like in Seoul?"}
+    ]
+)
+
+# or with chat completion
+
+result = openai.chat.completion.create(
     model="gpt-3.5-turbo",
     messages=[
-      {"role": "user", "content": "What's the weather like in Seoul?"}
+        {"role": "user", "content": "What's the weather like in Seoul?"}
     ],
-    functions=[
-        get_function_schema(get_weather)
-    ],
-    function_call="auto",
+    tools=[get_function_schema(get_weather)],
+    tool_call="auto",
+)
+```
+
+In claude api,
+
+```python
+import anthropic
+
+client = anthropic.Client()
+
+response = client.beta.tools.messages.create(
+    model="claude-3-opus-20240229",
+    max_tokens=4096,
+    tools=[get_function_schema(get_weather, "claude")],
+    messages=[
+        {"role": "user", "content": "What's the weather like in Seoul?"}
+    ]
 )
 ```
 
