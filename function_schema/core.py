@@ -12,7 +12,7 @@ def get_function_schema(
     func: typing.Annotated[typing.Callable, "The function to get the schema for"],
     format: typing.Annotated[
         typing.Optional[str], SchemaFormat, "The format of the schema to return"
-    ] = SchemaFormat.openai,
+    ] = "openai",
 ) -> typing.Annotated[dict[str, typing.Any], "The JSON schema for the given function"]:
     """
     Returns a JSON schema for the given function.
