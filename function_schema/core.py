@@ -1,5 +1,6 @@
 import enum
 import typing
+import types
 import inspect
 
 
@@ -138,7 +139,7 @@ def guess_type(
     origin = typing.get_origin(T)
 
     # hacking around typing modules, `typing.Union` and `types.UnitonType`
-    if origin is typing.Union:
+    if origin is typing.Union or origin is types.UnionType:
         union_types = [t for t in typing.get_args(T) if t is not type(None)]
         _types = []
         for union_type in union_types:
