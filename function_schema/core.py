@@ -1,7 +1,17 @@
 import enum
 import typing
-import types
 import inspect
+import platform
+import packaging.version
+
+current_version = packaging.version.parse(platform.python_version())
+py_310 = packaging.version.parse("3.10")
+
+if current_version >= py_310:
+    import types
+    from types import UnionType
+else:
+    UnionType = typing.Union  # type: ignore
 
 
 def get_function_schema(
@@ -139,7 +149,7 @@ def guess_type(
     origin = typing.get_origin(T)
 
     # hacking around typing modules, `typing.Union` and `types.UnitonType`
-    if origin is typing.Union or origin is types.UnionType:
+    if origin is typing.Union or origin is UnionType:
         union_types = [t for t in typing.get_args(T) if t is not type(None)]
         _types = []
         for union_type in union_types:
