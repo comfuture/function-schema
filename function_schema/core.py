@@ -1,17 +1,24 @@
 import enum
 import typing
 import inspect
+import platform
+import packaging.version
 
+current_version = packaging.version.parse(platform.python_version())
+py_310 = packaging.version.parse("3.10")
 
-class SchemaFormat(str, enum.Enum):
-    openai = "openai"
-    claude = "claude"
+if current_version >= py_310:
+    import types
+    from types import UnionType
+else:
+    UnionType = typing.Union  # type: ignore
 
 
 def get_function_schema(
     func: typing.Annotated[typing.Callable, "The function to get the schema for"],
     format: typing.Annotated[
-        typing.Optional[str], SchemaFormat, "The format of the schema to return"
+        typing.Optional[typing.Literal["openai", "claude"]],
+        "The format of the schema to return",
     ] = "openai",
 ) -> typing.Annotated[dict[str, typing.Any], "The JSON schema for the given function"]:
     """
@@ -66,7 +73,7 @@ def get_function_schema(
     }
     for name, param in params.items():
         param_args = typing.get_args(param.annotation)
-        is_annotated = len(param_args) > 1
+        is_annotated = typing.get_origin(param.annotation) is typing.Annotated
 
         enum_ = None
         default_value = inspect._empty
@@ -84,15 +91,18 @@ def get_function_schema(
             # find enum in param_args tuple
             enum_ = next(
                 (
-                    arg
+                    [e.name for e in arg]
                     for arg in param_args
                     if isinstance(arg, type) and issubclass(arg, enum.Enum)
                 ),
-                None,
+                # use typing.Literal as enum if no enum found
+                typing.get_origin(T) is typing.Literal and typing.get_args(T) or None,
             )
         else:
             T = param.annotation
             description = f"The {name} parameter"
+            if typing.get_origin(T) is typing.Literal:
+                enum_ = typing.get_args(T)
 
         # find default value for param
         if param.default is not inspect._empty:
@@ -104,12 +114,16 @@ def get_function_schema(
         }
 
         if enum_ is not None:
-            schema["properties"][name]["enum"] = [t.name for t in enum_]
+            schema["properties"][name]["enum"] = [t for t in enum_]
 
         if default_value is not inspect._empty:
             schema["properties"][name]["default"] = default_value
 
-        if not isinstance(None, T) and default_value is inspect._empty:
+        if (
+            typing.get_origin(T) is not typing.Literal
+            and not isinstance(None, T)
+            and default_value is inspect._empty
+        ):
             schema["required"].append(name)
 
     parms_key = "input_schema" if format == "claude" else "parameters"
@@ -128,9 +142,15 @@ def guess_type(
 ]:
     """Guesses the JSON schema type for the given python type."""
 
+    # special case
+    if T is typing.Any:
+        return {}
+
+    origin = typing.get_origin(T)
+
     # hacking around typing modules, `typing.Union` and `types.UnitonType`
-    union_types = typing.get_args(T)
-    if len(union_types) > 1:
+    if origin is typing.Union or origin is UnionType:
+        union_types = [t for t in typing.get_args(T) if t is not type(None)]
         _types = []
         for union_type in union_types:
             _types.append(guess_type(union_type))
@@ -143,6 +163,13 @@ def guess_type(
         if len(_types) == 1:
             return _types[0]
         return _types
+
+    if origin is typing.Literal:
+        return "string"
+    elif origin is list or origin is tuple:
+        return "array"
+    elif origin is dict:
+        return "object"
 
     if not isinstance(T, type):
         return
