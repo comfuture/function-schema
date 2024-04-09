@@ -1,5 +1,5 @@
 import enum
-from typing import Optional, Annotated
+from typing import Annotated, Literal
 from function_schema.core import get_function_schema
 
 
@@ -86,6 +86,7 @@ def test_annotated_function():
 
 def test_annotated_function_with_enum():
     """Test a function with annotations and enum"""
+
     def func1(
         animal: Annotated[
             str,
@@ -101,6 +102,39 @@ def test_annotated_function_with_enum():
     assert (
         schema["parameters"]["properties"]["animal"]["type"] == "string"
     ), "parameter animal should be a string"
+    assert schema["parameters"]["properties"]["animal"]["enum"] == [
+        "Cat",
+        "Dog",
+    ], "parameter animal should have an enum"
+
+
+def test_literal_type():
+    """Test literal type"""
+
+    def func1(animal: Annotated[Literal["Cat", "Dog"], "The animal you want to pet"]):
+        """My function"""
+        ...
+
+    schema = get_function_schema(func1)
+    print(schema)
     assert (
-        schema["parameters"]["properties"]["animal"]["enum"] == ["Cat", "Dog"]
-    ), "parameter animal should have an enum"
+        schema["parameters"]["properties"]["animal"]["type"] == "string"
+    ), "parameter animal should be a string"
+    assert schema["parameters"]["properties"]["animal"]["enum"] == [
+        "Cat",
+        "Dog",
+    ], "parameter animal should have an enum"
+
+    def func2(animal: Literal["Cat", "Dog"]):
+        """My function"""
+        ...
+
+    schema = get_function_schema(func2)
+    assert (
+        schema["parameters"]["properties"]["animal"]["type"] == "string"
+    ), "parameter animal should be a string"
+
+    assert schema["parameters"]["properties"]["animal"]["enum"] == [
+        "Cat",
+        "Dog",
+    ], "parameter animal should have an enum"

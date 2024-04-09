@@ -14,6 +14,22 @@ def test_primitive():
     assert guess_type(bool) == "boolean"
 
 
+def test_typings():
+    """Test typing module types"""
+    assert guess_type(typing.Any) == {}
+    assert guess_type(typing.List) == "array"
+    assert guess_type(typing.Dict) == "object"
+    assert guess_type(typing.Tuple) == "array"
+
+    assert guess_type(typing.List[int]) == "array"
+    assert guess_type(typing.List[str]) == "array"
+    assert guess_type(typing.List[float]) == "array"
+    assert guess_type(typing.List[bool]) == "array"
+
+    assert guess_type(typing.Dict[str, int]) == "object"
+    assert guess_type(typing.Dict[str, str]) == "object"
+
+
 def test_optional():
     """Test optional types"""
     assert guess_type(typing.Optional[int]) == "integer"
@@ -51,12 +67,15 @@ def test_union():
     ]
 
 
+current_version = packaging.version.parse(platform.python_version())
+py_310 = packaging.version.parse("3.10")
+
+
+@pytest.mark.skipif(
+    current_version < py_310, reason="Union type is only available in Python 3.10+"
+)
 def test_union_type():
     """Test union types in Python 3.10+"""
-    current_version = packaging.version.parse(platform.python_version())
-    py_310 = packaging.version.parse("3.10")
-    if current_version < py_310:
-        pytest.skip("Union type is only available in Python 3.10+")
 
     assert guess_type(int | str) == ["integer", "string"]
     assert guess_type(int | float) == "number"
@@ -75,3 +94,9 @@ def test_union_type():
         "number",
         "boolean",
     ]
+
+
+def test_literal_type():
+    """Test literal type"""
+    assert guess_type(typing.Literal["a"]) == "string"
+    assert guess_type(typing.Literal[1]) == "string"
