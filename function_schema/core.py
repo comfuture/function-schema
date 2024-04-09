@@ -80,7 +80,7 @@ def get_function_schema(
             # find enum in param_args tuple
             enum_ = next(
                 (
-                    arg.name
+                    [e.name for e in arg]
                     for arg in param_args
                     if isinstance(arg, type) and issubclass(arg, enum.Enum)
                 ),
