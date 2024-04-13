@@ -99,4 +99,16 @@ def test_union_type():
 def test_literal_type():
     """Test literal type"""
     assert guess_type(typing.Literal["a"]) == "string"
-    assert guess_type(typing.Literal[1]) == "string"
+    assert guess_type(typing.Literal[1]) == "integer"
+
+    assert guess_type(typing.Literal["a", 1, None]) == ["string", "integer"]
+
+    assert guess_type(typing.Literal["a", 1]) == ["string", "integer"]
+    assert guess_type(typing.Literal["a", 1.0]) == ["string", "integer"]
+    assert guess_type(typing.Literal["a", 1.1]) == ["string", "number"]
+    assert guess_type(typing.Literal["a", 1, 1.0]) == [
+        "string",
+        "number",
+    ]  # XXX should be ["string", "integer", "number"] ?
+
+    assert guess_type(typing.Literal["a", 1, 1.0, None]) == ["string", "number"]
