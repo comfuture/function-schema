@@ -171,9 +171,7 @@ def guess_type(
         return _types
 
     if origin is typing.Literal:
-        return guess_type(
-            typing.Union[tuple({type(arg) for arg in typing.get_args(T)})]
-        )
+        return guess_type(typing.Union[tuple(type(arg) for arg in typing.get_args(T))])
     elif origin is list or origin is tuple:
         return "array"
     elif origin is dict:
