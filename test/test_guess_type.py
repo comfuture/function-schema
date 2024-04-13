@@ -101,18 +101,14 @@ def test_literal_type():
     assert guess_type(typing.Literal["a"]) == "string"
     assert guess_type(typing.Literal[1]) == "integer"
 
-    assert set(guess_type(typing.Literal["a", 1, None])) == set(["string", "integer"])
+    assert set(guess_type(typing.Literal["a", 1, None])) == {"string", "integer"}
 
-    assert set(guess_type(typing.Literal["a", 1])) == set(["string", "integer"])
-    assert set(guess_type(typing.Literal["a", 1.0])) == set(["string", "integer"])
-    assert set(guess_type(typing.Literal["a", 1.1])) == set(["string", "number"])
-    assert set(guess_type(typing.Literal["a", 1, 1.0])) == set(
-        [
-            "string",
-            "number",
-        ]
-    )  # XXX should be ["string", "integer", "number"] ?
+    assert set(guess_type(typing.Literal["a", 1])) == {"string", "integer"}
+    assert set(guess_type(typing.Literal["a", 1.0])) == {"string", "integer"}
+    assert set(guess_type(typing.Literal["a", 1.1])) == {"string", "number"}
+    assert set(guess_type(typing.Literal["a", 1, 1.0])) == {
+        "string",
+        "number",
+    }  # XXX should be ["string", "integer", "number"] ?
 
-    assert set(guess_type(typing.Literal["a", 1, 1.0, None])) == set(
-        ["string", "number"]
-    )
+    assert set(guess_type(typing.Literal["a", 1, 1.0, None])) == {"string", "number"}
