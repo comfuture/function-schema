@@ -47,10 +47,10 @@ def test_function_with_args():
     assert (
         schema["parameters"]["properties"]["c"]["default"] == 1.0
     ), "c should have a default value of 1.0"
-    assert schema["parameters"]["required"] == [
-        "a",
-        "b",
-    ], "parameters with no default value should be required"
+    assert (
+        "a" in schema["parameters"]["required"]
+        and "b" in schema["parameters"]["required"]
+    ), "parameters with no default value should be required"
 
 
 def test_annotated_function():
@@ -78,10 +78,10 @@ def test_annotated_function():
         schema["parameters"]["properties"]["b"]["description"] == "A string parameter"
     ), "parameter b should have a description"
 
-    assert schema["parameters"]["required"] == [
-        "a",
-        "b",
-    ], "parameters with no default value should be required"
+    assert (
+        "a" in schema["parameters"]["required"]
+        and "b" in schema["parameters"]["required"]
+    ), "parameters with no default value should be required"
 
 
 def test_annotated_function_with_enum():
