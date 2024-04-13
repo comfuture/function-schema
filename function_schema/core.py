@@ -114,7 +114,7 @@ def get_function_schema(
         }
 
         if enum_ is not None:
-            schema["properties"][name]["enum"] = [t for t in enum_]
+            schema["properties"][name]["enum"] = [t for t in enum_ if t is not None]
 
         if default_value is not inspect._empty:
             schema["properties"][name]["default"] = default_value
@@ -126,7 +126,13 @@ def get_function_schema(
         ):
             schema["required"].append(name)
 
+        if typing.get_origin(T) is typing.Literal:
+            if all(typing.get_args(T)):
+                schema["required"].append(name)
+
     parms_key = "input_schema" if format == "claude" else "parameters"
+
+    schema["required"] = list(set(schema["required"]))
 
     return {
         "name": func.__name__,
@@ -165,7 +171,9 @@ def guess_type(
         return _types
 
     if origin is typing.Literal:
-        return "string"
+        return guess_type(
+            typing.Union[tuple({type(arg) for arg in typing.get_args(T)})]
+        )
     elif origin is list or origin is tuple:
         return "array"
     elif origin is dict:
