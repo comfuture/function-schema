@@ -47,10 +47,10 @@ def test_function_with_args():
     assert (
         schema["parameters"]["properties"]["c"]["default"] == 1.0
     ), "c should have a default value of 1.0"
-    assert schema["parameters"]["required"] == [
-        "a",
-        "b",
-    ], "parameters with no default value should be required"
+    assert (
+        "a" in schema["parameters"]["required"]
+        and "b" in schema["parameters"]["required"]
+    ), "parameters with no default value should be required"
 
 
 def test_annotated_function():
@@ -78,10 +78,10 @@ def test_annotated_function():
         schema["parameters"]["properties"]["b"]["description"] == "A string parameter"
     ), "parameter b should have a description"
 
-    assert schema["parameters"]["required"] == [
-        "a",
-        "b",
-    ], "parameters with no default value should be required"
+    assert (
+        "a" in schema["parameters"]["required"]
+        and "b" in schema["parameters"]["required"]
+    ), "parameters with no default value should be required"
 
 
 def test_annotated_function_with_enum():
@@ -116,7 +116,6 @@ def test_literal_type():
         ...
 
     schema = get_function_schema(func1)
-    print(schema)
     assert (
         schema["parameters"]["properties"]["animal"]["type"] == "string"
     ), "parameter animal should be a string"
@@ -138,3 +137,37 @@ def test_literal_type():
         "Cat",
         "Dog",
     ], "parameter animal should have an enum"
+
+    assert "animal" in schema["parameters"]["required"], "animal is required"
+
+    def func3(animal: Literal["Cat", "Dog", 1]):
+        """My function"""
+        ...
+
+    schema = get_function_schema(func3)
+    assert schema["parameters"]["properties"]["animal"]["type"] == [
+        "string",
+        "integer",
+    ], "parameter animal should be a string"
+
+    def func4(animal: Literal["Cat", "Dog", 1, None]):
+        """My function"""
+        ...
+
+    schema = get_function_schema(func4)
+
+    assert schema["parameters"]["properties"]["animal"]["type"] == [
+        "string",
+        "integer",
+    ], "parameter animal should be a string"
+
+    assert schema["parameters"]["properties"]["animal"]["enum"] == [
+        "Cat",
+        "Dog",
+        1,
+    ], "parameter animal should have an enum"
+
+    assert (
+        schema["parameters"].get("required") is None
+        or "animal" not in schema["parameters"]["required"]
+    ), "animal should not be required"

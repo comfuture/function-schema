@@ -98,5 +98,21 @@ def test_union_type():
 
 def test_literal_type():
     """Test literal type"""
-    assert guess_type(typing.Literal["a"]) == "string"
-    assert guess_type(typing.Literal[1]) == "string"
+    assert guess_type(typing.Literal["a"]) == "string", "should be string"
+    assert guess_type(typing.Literal[1]) == "integer", "should be integer"
+    assert guess_type(typing.Literal[1.0]) == "number", "should be number"
+
+    assert set(guess_type(typing.Literal["a", 1, None])) == {
+        "string",
+        "integer",
+    }, "should be string or integer, omit None"
+
+    assert set(guess_type(typing.Literal["a", 1])) == {"string", "integer"}
+    assert set(guess_type(typing.Literal["a", 1.0])) == {"string", "number"}
+    assert set(guess_type(typing.Literal["a", 1.1])) == {"string", "number"}
+    assert set(guess_type(typing.Literal["a", 1, 1.0])) == {
+        "string",
+        "number",
+    }, "should omit integer if number is present"
+
+    assert set(guess_type(typing.Literal["a", 1, 1.0, None])) == {"string", "number"}

@@ -8,7 +8,6 @@ current_version = packaging.version.parse(platform.python_version())
 py_310 = packaging.version.parse("3.10")
 
 if current_version >= py_310:
-    import types
     from types import UnionType
 else:
     UnionType = typing.Union  # type: ignore
@@ -114,7 +113,7 @@ def get_function_schema(
         }
 
         if enum_ is not None:
-            schema["properties"][name]["enum"] = [t for t in enum_]
+            schema["properties"][name]["enum"] = [t for t in enum_ if t is not None]
 
         if default_value is not inspect._empty:
             schema["properties"][name]["default"] = default_value
@@ -126,7 +125,13 @@ def get_function_schema(
         ):
             schema["required"].append(name)
 
+        if typing.get_origin(T) is typing.Literal:
+            if all(typing.get_args(T)):
+                schema["required"].append(name)
+
     parms_key = "input_schema" if format == "claude" else "parameters"
+
+    schema["required"] = list(set(schema["required"]))
 
     return {
         "name": func.__name__,
@@ -148,13 +153,17 @@ def guess_type(
 
     origin = typing.get_origin(T)
 
+    if origin is typing.Annotated:
+        return guess_type(typing.get_args(T)[0])
+
     # hacking around typing modules, `typing.Union` and `types.UnitonType`
-    if origin is typing.Union or origin is UnionType:
+    if origin in [typing.Union, UnionType]:
         union_types = [t for t in typing.get_args(T) if t is not type(None)]
-        _types = []
-        for union_type in union_types:
-            _types.append(guess_type(union_type))
-        _types = [t for t in _types if t is not None]  # exclude None
+        _types = [
+            guess_type(union_type)
+            for union_type in union_types
+            if guess_type(union_type) is not None
+        ]
 
         # number contains integer in JSON schema
         if "number" in _types and "integer" in _types:
@@ -165,7 +174,8 @@ def guess_type(
         return _types
 
     if origin is typing.Literal:
-        return "string"
+        type_args = typing.Union[tuple(type(arg) for arg in typing.get_args(T))]
+        return guess_type(type_args)
     elif origin is list or origin is tuple:
         return "array"
     elif origin is dict:
