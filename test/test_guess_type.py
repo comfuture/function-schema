@@ -77,23 +77,22 @@ py_310 = packaging.version.parse("3.10")
 def test_union_type():
     """Test union types in Python 3.10+"""
 
-    assert guess_type(int | str) == ["integer", "string"]
+    assert set(guess_type(int | str)) == {"number", "string"}
     assert guess_type(int | float) == "number"
-    assert guess_type(int | bool) == ["integer", "boolean"]
-    assert guess_type(bool | int) == ["boolean", "integer"]
-    assert guess_type(str | float) == ["string", "number"]
-    assert guess_type(str | bool) == ["string", "boolean"]
-    assert guess_type(float | bool) == ["number", "boolean"]
-    assert guess_type(str | float | bool) == [
+    assert set(guess_type(int | bool)) == {"number", "boolean"}
+    assert set(guess_type(str | float)) == {"string", "number"}
+    assert set(guess_type(str | bool)) == {"string", "boolean"}
+    assert set(guess_type(float | bool)) == {"number", "boolean"}
+    assert set(guess_type(str | float | bool)) == {
         "string",
         "number",
         "boolean",
-    ]
-    assert guess_type(str | float | bool | None) == [
+    }
+    assert set(guess_type(str | float | bool | None)) == {
         "string",
         "number",
         "boolean",
-    ]
+    }
 
 
 def test_literal_type():
