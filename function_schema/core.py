@@ -166,8 +166,8 @@ def guess_type(
         ]
 
         # number contains integer in JSON schema
-        if "number" in _types and "integer" in _types:
-            _types.remove("integer")
+        # deduplicate
+        _types = list(set(_types))
 
         if len(_types) == 1:
             return _types[0]
@@ -191,10 +191,10 @@ def guess_type(
         return "string"
     if issubclass(T, bool):
         return "boolean"
-    if issubclass(T, float):
+    if issubclass(T, (float, int)):
         return "number"
-    elif issubclass(T, int):
-        return "integer"
+    # elif issubclass(T, int):
+    #     return "integer"
     if T.__name__ == "list":
         return "array"
     if T.__name__ == "dict":

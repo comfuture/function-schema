@@ -89,6 +89,23 @@ schema = get_function_schema(get_weather, "claude")
 
 Please refer to the [Claude tool use](https://docs.anthropic.com/claude/docs/tool-use) documentation for more information.
 
+### Literal types can be used as Enum
+
+```python
+def get_weather(
+    city: Annotated[str, "The city to get the weather for"],
+    unit: Annotated[
+        Optional[Literal["celcius", "fahrenheit"]], # <- Literal type represents Enum
+        "The unit to return the temperature in",
+    ] = "celcius",
+) -> str:
+    """Returns the weather for the given city."""
+    return f"Weather for {city} is 20°C"
+```
+The schema will be generated as the same as the previous example.
+
+### Usage with OpenAI API
+
 You can use this schema to make a function call in OpenAI API:
 ```python
 import openai
@@ -118,12 +135,15 @@ result = openai.chat.completion.create(
     messages=[
         {"role": "user", "content": "What's the weather like in Seoul?"}
     ],
-    tools=[get_function_schema(get_weather)],
+    tools=[{
+      "type": "function",
+      "function": get_function_schema(get_weather)
+    }],
     tool_call="auto",
 )
 ```
 
-In claude api,
+### Usage with Anthropic Claude
 
 ```python
 import anthropic
