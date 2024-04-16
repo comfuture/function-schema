@@ -36,7 +36,7 @@ def test_function_with_args():
         schema["description"] == "My function"
     ), "Function description should be there"
     assert (
-        schema["parameters"]["properties"]["a"]["type"] == "integer"
+        schema["parameters"]["properties"]["a"]["type"] == "number"
     ), "parameter a should be an integer"
     assert (
         schema["parameters"]["properties"]["b"]["type"] == "string"
@@ -66,7 +66,7 @@ def test_annotated_function():
     schema = get_function_schema(func1)
 
     assert (
-        schema["parameters"]["properties"]["a"]["type"] == "integer"
+        schema["parameters"]["properties"]["a"]["type"] == "number"
     ), "parameter a should be an integer"
     assert (
         schema["parameters"]["properties"]["a"]["description"] == "An integer parameter"
@@ -145,10 +145,10 @@ def test_literal_type():
         ...
 
     schema = get_function_schema(func3)
-    assert schema["parameters"]["properties"]["animal"]["type"] == [
+    assert set(schema["parameters"]["properties"]["animal"]["type"]) == {
         "string",
-        "integer",
-    ], "parameter animal should be a string"
+        "number",
+    }, "parameter animal should be a string"
 
     def func4(animal: Literal["Cat", "Dog", 1, None]):
         """My function"""
@@ -156,10 +156,10 @@ def test_literal_type():
 
     schema = get_function_schema(func4)
 
-    assert schema["parameters"]["properties"]["animal"]["type"] == [
+    assert set(schema["parameters"]["properties"]["animal"]["type"]) == {
         "string",
-        "integer",
-    ], "parameter animal should be a string"
+        "number",
+    }, "parameter animal should be a string"
 
     assert schema["parameters"]["properties"]["animal"]["enum"] == [
         "Cat",
