@@ -27,7 +27,7 @@ jobs:
       with:
         python-version: '3.x'
     - name: Set up uv
-      run: curl -LsSf https://astral.sh/uv/0.4.5/install.sh | sh
+      run: curl -LsSf https://astral.sh/uv/install.sh | sh
     - name: Install dependencies
       run: uvx --from build pyproject-build --installer uv
     - name: Publish package
