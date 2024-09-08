@@ -24,11 +24,6 @@ name = "function-schema"
 version = "0.3.6"
 source = { editable = "." }
 
-[package.optional-dependencies]
-test = [
-    { name = "pytest" },
-]
-
 [package.dev-dependencies]
 dev = [
     { name = "pytest" },
@@ -36,7 +31,6 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "pytest", marker = "extra == 'test'" }]
 
 [package.metadata.requires-dev]
 dev = [
