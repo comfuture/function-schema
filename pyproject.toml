@@ -17,9 +17,6 @@ classifiers = [
   "Programming Language :: Python :: 3.9",
 ]
 
-[project.optional-dependencies]
-test = ["pytest"]
-
 [project.urls]
 Homepage = "https://github.com/comfuture/function-schema"
 Repository = "https://github.com/comfuture/function-schema"
@@ -30,3 +27,9 @@ function_schema = "function_schema.cli:main"
 [build-system]
 requires = ["flit_core >=3.9,<4"]
 build-backend = "flit_core.buildapi"
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.3.2",
+    "typing-extensions>=4.12.2",
+]

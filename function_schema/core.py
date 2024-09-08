@@ -12,6 +12,50 @@ if current_version >= py_310:
 else:
     UnionType = typing.Union  # type: ignore
 
+try:
+    from typing import Doc
+except ImportError:
+    try:
+        from typing_extensions import Doc
+    except ImportError:
+        class Doc:
+            def __init__(self, documentation: str, /):
+                self.documentation = documentation
+
+__all__ = ("get_function_schema", "guess_type", "Doc")
+
+def is_doc_meta(obj):
+    """
+    Check if the given object is a documentation object.
+    Parameters:
+        obj (object): The object to be checked.
+    Returns:
+        bool: True if the object is a documentation object, False otherwise.
+
+    Example:
+    >>> is_doc_meta(Doc("This is a documentation object"))
+    True
+    """
+    return getattr(obj, '__class__') == Doc and hasattr(obj, 'documentation')
+
+def unwrap_doc(obj: typing.Union[Doc, str]):
+    """
+    Get the documentation string from the given object.
+    Parameters:
+        obj (Doc | str): The object to get the documentation string from.
+    Returns:
+        str: The documentation string.
+
+    Example:
+    >>> unwrap_doc(Doc("This is a documentation object"))
+    'This is a documentation object'
+    >>> unwrap_doc("This is a documentation string")
+    'This is a documentation string'
+    """
+    if is_doc_meta(obj):
+        return obj.documentation
+    return str(obj)
+
 
 def get_function_schema(
     func: typing.Annotated[typing.Callable, "The function to get the schema for"],
@@ -83,7 +127,7 @@ def get_function_schema(
 
             # find description in param_args tuple
             description = next(
-                (arg for arg in param_args if isinstance(arg, str)),
+                (unwrap_doc(arg) for arg in param_args if isinstance(arg, (Doc, str))),
                 f"The {name} parameter",
             )
 
