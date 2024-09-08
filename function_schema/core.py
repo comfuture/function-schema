@@ -38,7 +38,7 @@ def is_doc_meta(obj):
     """
     return getattr(obj, '__class__') == Doc and hasattr(obj, 'documentation')
 
-def unwrap_doc(obj: Doc | str):
+def unwrap_doc(obj: typing.Union[Doc, str]):
     """
     Get the documentation string from the given object.
     Parameters:
