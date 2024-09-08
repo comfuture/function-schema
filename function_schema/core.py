@@ -24,7 +24,7 @@ except ImportError:
 
 __all__ = ("get_function_schema", "guess_type", "Doc")
 
-def is_documentation(obj):
+def is_doc_meta(obj):
     """
     Check if the given object is a documentation object.
     Parameters:
@@ -33,12 +33,12 @@ def is_documentation(obj):
         bool: True if the object is a documentation object, False otherwise.
 
     Example:
-    >>> is_documentation(Doc("This is a documentation object"))
+    >>> is_doc_meta(Doc("This is a documentation object"))
     True
     """
     return getattr(obj, '__class__') == Doc and hasattr(obj, 'documentation')
 
-def unref_doc(obj: Doc | str):
+def unwrap_doc(obj: Doc | str):
     """
     Get the documentation string from the given object.
     Parameters:
@@ -47,12 +47,12 @@ def unref_doc(obj: Doc | str):
         str: The documentation string.
 
     Example:
-    >>> unref_doc(Doc("This is a documentation object"))
-    'This is a documentation object
-    >>> unref_doc("This is a documentation string")
+    >>> unwrap_doc(Doc("This is a documentation object"))
+    'This is a documentation object'
+    >>> unwrap_doc("This is a documentation string")
     'This is a documentation string'
     """
-    if is_documentation(obj):
+    if is_doc_meta(obj):
         return obj.documentation
     return str(obj)
 
@@ -127,7 +127,7 @@ def get_function_schema(
 
             # find description in param_args tuple
             description = next(
-                (unref_doc(arg) for arg in param_args if isinstance(arg, (Doc, str))),
+                (unwrap_doc(arg) for arg in param_args if isinstance(arg, (Doc, str))),
                 f"The {name} parameter",
             )
 
