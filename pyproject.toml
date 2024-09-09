@@ -1,6 +1,6 @@
 [project]
 name = "function-schema"
-version = "0.4.1"
+version = "0.4.2"
 requires-python = ">= 3.9"
 description = "A small utility to generate JSON schemas for python functions."
 readme = "README.md"
