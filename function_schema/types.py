@@ -1,4 +1,4 @@
-from typing import TypedDict, Optional
+from typing import (TypedDict, Literal, TypeVar, Union, NotRequired, Generic)
 
 
 class ParamSchema(TypedDict):
@@ -12,18 +12,48 @@ class ParamSchema(TypedDict):
     """
     type: str
     description: str
-    enum: Optional[list[str]]
-    default: Optional[str]
+    enum: NotRequired[list[str]]
+    default: NotRequired[str]
 
 
-class FunctionSchema(TypedDict):
+class RootProperty(TypedDict):
+    """
+    Represents the schema for a parameter.
+    Attributes:
+        type (str): Root property can only be "object".
+        properties (dict[str, ParamSchema]): The properties of the object.
+    """
+    type: Literal["object"]
+    properties: dict[str, ParamSchema]
+
+
+T = TypeVar('T', bound=Union['WithParameters', 'WithInputSchema'])
+
+
+class WithParameters(TypedDict):
+    parameters: RootProperty
+
+
+class WithInputSchema(TypedDict):
+    input_schema: RootProperty
+
+
+class FunctionSchemaBase(TypedDict):
+    name: str
+    description: str
+
+
+class FunctionSchema(FunctionSchemaBase, Generic[T]):
     """
     Represents the schema of a function.
     Attributes:
         name (str): The name of the function.
         description (str): The description of the function.
-        input_schema (ParamSchema): The schema for the input parameters of the function.
+        parameters (RootProperty): The schema for the function parameters.
+        input_schema (ParamSchema): The schema for the function parameters if format is "claude".
     """
-    name: str
-    description: str
-    input_schema: ParamSchema
+    pass
+
+
+OpenAIFunctionSchema = FunctionSchema[WithParameters]
+ClaudeFunctionSchema = FunctionSchema[WithInputSchema]

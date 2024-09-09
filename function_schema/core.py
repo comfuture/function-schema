@@ -3,7 +3,7 @@ import inspect
 import platform
 import packaging.version
 from typing import Annotated, Optional, Union, Callable, Literal, Any, get_args, get_origin
-from .types import FunctionSchema
+from .types import OpenAIFunctionSchema, ClaudeFunctionSchema
 
 current_version = packaging.version.parse(platform.python_version())
 py_310 = packaging.version.parse("3.10")
@@ -61,7 +61,8 @@ def get_function_schema(
         Optional[Literal["openai", "claude"]],
         Doc("The format of the schema to return"),
     ] = "openai",
-) -> Annotated[FunctionSchema, Doc("The JSON schema for the given function")]:
+) -> Annotated[Union[OpenAIFunctionSchema, ClaudeFunctionSchema],
+               Doc("The JSON schema for the given function")]:
     """
     Returns a JSON schema for the given function.
 
