@@ -20,13 +20,14 @@ pip install function-schema
 
 ```python
 from typing import Annotated, Optional
+from function_schema import Doc
 import enum
 
 def get_weather(
-    city: Annotated[str, "The city to get the weather for"],
+    city: Annotated[str, Doc("The city to get the weather for")],
     unit: Annotated[
         Optional[str],
-        "The unit to return the temperature in",
+        Doc("The unit to return the temperature in"),
         enum.Enum("Unit", "celcius fahrenheit")
     ] = "celcius",
 ) -> str:
@@ -37,10 +38,7 @@ def get_weather(
 Function description is taken from the docstring.
 Type hinting with `typing.Annotated` for annotate additional information about the parameters and return type.
 
-- type can be `typing.Union`, `typing.Optional`. (`T | None` for python 3.10+)
-- string value of `Annotated` is used as a description
-- enum value of `Annotated` is used as an enum schema
-
+Then you can generate a schema for this function:
 ```python
 import json
 from function_schema import get_function_schema
@@ -89,20 +87,55 @@ schema = get_function_schema(get_weather, "claude")
 
 Please refer to the [Claude tool use](https://docs.anthropic.com/claude/docs/tool-use) documentation for more information.
 
-### Literal types can be used as Enum
+You can use any type hinting supported by python for the first argument of `Annotated`. including:
+`typing.Literal`, `typing.Optional`, `typing.Union`, and `T | None` for python 3.10+.  
+`Doc` class or plain string in `Annotated` is used for describe the parameter.
+`Doc` metadata is the [PEP propose](https://peps.python.org/pep-0727/) for standardizing the metadata in type hints.
+currently, implemented in `typing-extensions` module. Also `function_schema.Doc` is provided for compatibility.
+
+Enumeratable candidates can be defined with `enum.Enum` in the argument of `Annotated`.
+
+```python
+import enum
+
+class AnimalType(enum.Enum):
+    dog = enum.auto()
+    cat = enum.auto()
+
+def get_animal(
+    animal: Annotated[str, Doc("The animal to get"), AnimalType],
+) -> str:
+    """Returns the animal."""
+    return f"Animal is {animal.value}"
+```
+In this example, each name of `AnimalType` enums(`dog`, `cat`) is used as an enum schema.
+In shorthand, you can use `typing.Literal` as the type will do the same thing.
+
+```python
+def get_animal(
+    animal: Annotated[Literal["dog", "cat"], Doc("The animal to get")],
+) -> str:
+    """Returns the animal."""
+    return f"Animal is {animal}"
+```
+
+
+### Plain String in Annotated
+
+The string value of `Annotated` is used as a description for convenience.
 
 ```python
 def get_weather(
-    city: Annotated[str, "The city to get the weather for"],
-    unit: Annotated[
-        Optional[Literal["celcius", "fahrenheit"]], # <- Literal type represents Enum
-        "The unit to return the temperature in",
-    ] = "celcius",
+    city: Annotated[str, "The city to get the weather for"], # <- string value of Annotated is used as a description
+    unit: Annotated[Optional[str], "The unit to return the temperature in"] = "celcius",
 ) -> str:
     """Returns the weather for the given city."""
     return f"Weather for {city} is 20°C"
 ```
-The schema will be generated as the same as the previous example.
+
+But this would create a predefined meaning for any plain string inside of `Annotated`,
+and any tool that was using plain strings in them for any other purpose, which is currently allowed, would now be invalid.
+Please refer to the [PEP 0727, Plain String in Annotated](https://peps.python.org/pep-0727/#plain-string-in-annotated) for more information.
 
 ### Usage with OpenAI API
 
@@ -163,7 +196,7 @@ response = client.beta.tools.messages.create(
 ### CLI usage
 
 ```sh
-function_schema mymodule.py my_function
+function_schema mymodule.py my_function | jq
 ```
 
 ## License
