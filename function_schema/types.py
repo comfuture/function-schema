@@ -1,4 +1,9 @@
-from typing import (TypedDict, Literal, TypeVar, Union, NotRequired, Generic)
+from typing import TypedDict, Literal, TypeVar, Union, Generic, Optional
+
+try:
+    from typing import NotRequired
+except ImportError:
+    NotRequired = TypeVar("NotRequired", bound=Optional)
 
 
 class ParamSchema(TypedDict):
@@ -10,6 +15,7 @@ class ParamSchema(TypedDict):
         enum (Optional[list[str]]): The list of allowed values for the parameter (optional).
         default (Optional[str]): The default value for the parameter (optional).
     """
+
     type: str
     description: str
     enum: NotRequired[list[str]]
@@ -23,11 +29,12 @@ class RootProperty(TypedDict):
         type (str): Root property can only be "object".
         properties (dict[str, ParamSchema]): The properties of the object.
     """
+
     type: Literal["object"]
     properties: dict[str, ParamSchema]
 
 
-T = TypeVar('T', bound=Union['WithParameters', 'WithInputSchema'])
+T = TypeVar("T", bound=Union["WithParameters", "WithInputSchema"])
 
 
 class WithParameters(TypedDict):
@@ -52,6 +59,7 @@ class FunctionSchema(FunctionSchemaBase, Generic[T]):
         parameters (RootProperty): The schema for the function parameters.
         input_schema (ParamSchema): The schema for the function parameters if format is "claude".
     """
+
     pass
 
 
