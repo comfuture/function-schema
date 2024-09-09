@@ -1,8 +1,8 @@
 import enum
-import typing
 import inspect
 import platform
 import packaging.version
+from typing import Annotated, Optional, Union, Callable, Literal, Any, get_args, get_origin
 
 current_version = packaging.version.parse(platform.python_version())
 py_310 = packaging.version.parse("3.10")
@@ -10,7 +10,7 @@ py_310 = packaging.version.parse("3.10")
 if current_version >= py_310:
     from types import UnionType
 else:
-    UnionType = typing.Union  # type: ignore
+    UnionType = Union  # type: ignore
 
 try:
     from typing import Doc
@@ -22,15 +22,12 @@ except ImportError:
             def __init__(self, documentation: str, /):
                 self.documentation = documentation
 
-__all__ = ("get_function_schema", "guess_type", "Doc")
+__all__ = ("get_function_schema", "guess_type", "Doc", "Annotated")
 
-def is_doc_meta(obj):
+
+def is_doc_meta(obj: Annotated[Any, Doc("The object to be checked.")]) -> Annotated[bool, Doc("True if the object is a documentation object, False otherwise.")]:
     """
     Check if the given object is a documentation object.
-    Parameters:
-        obj (object): The object to be checked.
-    Returns:
-        bool: True if the object is a documentation object, False otherwise.
 
     Example:
     >>> is_doc_meta(Doc("This is a documentation object"))
@@ -38,13 +35,10 @@ def is_doc_meta(obj):
     """
     return getattr(obj, '__class__') == Doc and hasattr(obj, 'documentation')
 
-def unwrap_doc(obj: typing.Union[Doc, str]):
+
+def unwrap_doc(obj: Annotated[Union[Doc, str], Doc("The object to get the documentation string from.")]) -> Annotated[str, Doc("The documentation string.")]:
     """
     Get the documentation string from the given object.
-    Parameters:
-        obj (Doc | str): The object to get the documentation string from.
-    Returns:
-        str: The documentation string.
 
     Example:
     >>> unwrap_doc(Doc("This is a documentation object"))
@@ -58,12 +52,12 @@ def unwrap_doc(obj: typing.Union[Doc, str]):
 
 
 def get_function_schema(
-    func: typing.Annotated[typing.Callable, "The function to get the schema for"],
-    format: typing.Annotated[
-        typing.Optional[typing.Literal["openai", "claude"]],
-        "The format of the schema to return",
+    func: Annotated[Callable, Doc("The function to get the schema for")],
+    format: Annotated[
+        Optional[Literal["openai", "claude"]],
+        Doc("The format of the schema to return"),
     ] = "openai",
-) -> typing.Annotated[dict[str, typing.Any], "The JSON schema for the given function"]:
+) -> Annotated[dict[str, Any], Doc("The JSON schema for the given function")]:
     """
     Returns a JSON schema for the given function.
 
@@ -76,10 +70,10 @@ def get_function_schema(
     >>> from typing import Annotated, Optional
     >>> import enum
     >>> def get_weather(
-    ...     city: Annotated[str, "The city to get the weather for"],
+    ...     city: Annotated[str, Doc("The city to get the weather for")],
     ...     unit: Annotated[
     ...         Optional[str],
-    ...         "The unit to return the temperature in",
+    ...         Doc("The unit to return the temperature in"),
     ...         enum.Enum("Unit", "celcius fahrenheit")
     ...     ] = "celcius",
     ... ) -> str:
@@ -115,8 +109,8 @@ def get_function_schema(
         "required": [],
     }
     for name, param in params.items():
-        param_args = typing.get_args(param.annotation)
-        is_annotated = typing.get_origin(param.annotation) is typing.Annotated
+        param_args = get_args(param.annotation)
+        is_annotated = get_origin(param.annotation) is Annotated
 
         enum_ = None
         default_value = inspect._empty
@@ -126,10 +120,17 @@ def get_function_schema(
             (T, *_) = param_args
 
             # find description in param_args tuple
-            description = next(
-                (unwrap_doc(arg) for arg in param_args if isinstance(arg, (Doc, str))),
-                f"The {name} parameter",
-            )
+            try:
+                description = next(
+                    unwrap_doc(arg)
+                    for arg in param_args if isinstance(arg, Doc)
+                )
+            except StopIteration:
+                try:
+                    description = next(
+                        arg for arg in param_args if isinstance(arg, str))
+                except StopIteration:
+                    description = "The {name} parameter"
 
             # find enum in param_args tuple
             enum_ = next(
@@ -139,13 +140,13 @@ def get_function_schema(
                     if isinstance(arg, type) and issubclass(arg, enum.Enum)
                 ),
                 # use typing.Literal as enum if no enum found
-                typing.get_origin(T) is typing.Literal and typing.get_args(T) or None,
+                get_origin(T) is Literal and get_args(T) or None,
             )
         else:
             T = param.annotation
             description = f"The {name} parameter"
-            if typing.get_origin(T) is typing.Literal:
-                enum_ = typing.get_args(T)
+            if get_origin(T) is Literal:
+                enum_ = get_args(T)
 
         # find default value for param
         if param.default is not inspect._empty:
@@ -157,20 +158,21 @@ def get_function_schema(
         }
 
         if enum_ is not None:
-            schema["properties"][name]["enum"] = [t for t in enum_ if t is not None]
+            schema["properties"][name]["enum"] = [
+                t for t in enum_ if t is not None]
 
         if default_value is not inspect._empty:
             schema["properties"][name]["default"] = default_value
 
         if (
-            typing.get_origin(T) is not typing.Literal
+            get_origin(T) is not Literal
             and not isinstance(None, T)
             and default_value is inspect._empty
         ):
             schema["required"].append(name)
 
-        if typing.get_origin(T) is typing.Literal:
-            if all(typing.get_args(T)):
+        if get_origin(T) is Literal:
+            if all(get_args(T)):
                 schema["required"].append(name)
 
     parms_key = "input_schema" if format == "claude" else "parameters"
@@ -185,24 +187,25 @@ def get_function_schema(
 
 
 def guess_type(
-    T: typing.Annotated[type, "The type to guess the JSON schema type for"],
-) -> typing.Annotated[
-    typing.Union[str, list[str]], "str | list of str that representing JSON schema type"
+    T: Annotated[type, Doc("The type to guess the JSON schema type for")],
+) -> Annotated[
+    Union[str, list[str]], Doc(
+        "str | list of str that representing JSON schema type")
 ]:
     """Guesses the JSON schema type for the given python type."""
 
     # special case
-    if T is typing.Any:
+    if T is Any:
         return {}
 
-    origin = typing.get_origin(T)
+    origin = get_origin(T)
 
-    if origin is typing.Annotated:
-        return guess_type(typing.get_args(T)[0])
+    if origin is Annotated:
+        return guess_type(get_args(T)[0])
 
     # hacking around typing modules, `typing.Union` and `types.UnitonType`
-    if origin in [typing.Union, UnionType]:
-        union_types = [t for t in typing.get_args(T) if t is not type(None)]
+    if origin in [Union, UnionType]:
+        union_types = [t for t in get_args(T) if t is not type(None)]
         _types = [
             guess_type(union_type)
             for union_type in union_types
@@ -217,8 +220,8 @@ def guess_type(
             return _types[0]
         return _types
 
-    if origin is typing.Literal:
-        type_args = typing.Union[tuple(type(arg) for arg in typing.get_args(T))]
+    if origin is Literal:
+        type_args = Union[tuple(type(arg) for arg in get_args(T))]
         return guess_type(type_args)
     elif origin is list or origin is tuple:
         return "array"
