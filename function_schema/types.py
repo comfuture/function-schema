@@ -1,9 +1,12 @@
-from typing import TypedDict, Literal, TypeVar, Union, Generic, Optional
+from typing import TypedDict, Literal, TypeVar, Union, Generic
 
 try:
     from typing import NotRequired
 except ImportError:
-    NotRequired = TypeVar("NotRequired", bound=Optional)
+    try:
+        from typing_extensions import NotRequired
+    except ImportError:
+        from typing import Optional as NotRequired
 
 
 class ParamSchema(TypedDict):
