@@ -2,7 +2,17 @@ import enum
 import inspect
 import platform
 import packaging.version
-from typing import Annotated, Optional, Union, Callable, Literal, Any, get_args, get_origin
+from typing import (
+    Annotated,
+    Optional,
+    Union,
+    Callable,
+    Literal,
+    Any,
+    get_args,
+    get_origin,
+)
+from .types import FunctionSchema
 
 current_version = packaging.version.parse(platform.python_version())
 py_310 = packaging.version.parse("3.10")
@@ -18,14 +28,20 @@ except ImportError:
     try:
         from typing_extensions import Doc
     except ImportError:
+
         class Doc:
             def __init__(self, documentation: str, /):
                 self.documentation = documentation
 
+
 __all__ = ("get_function_schema", "guess_type", "Doc", "Annotated")
 
 
-def is_doc_meta(obj: Annotated[Any, Doc("The object to be checked.")]) -> Annotated[bool, Doc("True if the object is a documentation object, False otherwise.")]:
+def is_doc_meta(
+    obj: Annotated[Any, Doc("The object to be checked.")],
+) -> Annotated[
+    bool, Doc("True if the object is a documentation object, False otherwise.")
+]:
     """
     Check if the given object is a documentation object.
 
@@ -33,10 +49,14 @@ def is_doc_meta(obj: Annotated[Any, Doc("The object to be checked.")]) -> Annota
     >>> is_doc_meta(Doc("This is a documentation object"))
     True
     """
-    return getattr(obj, '__class__') == Doc and hasattr(obj, 'documentation')
+    return getattr(obj, "__class__") == Doc and hasattr(obj, "documentation")
 
 
-def unwrap_doc(obj: Annotated[Union[Doc, str], Doc("The object to get the documentation string from.")]) -> Annotated[str, Doc("The documentation string.")]:
+def unwrap_doc(
+    obj: Annotated[
+        Union[Doc, str], Doc("The object to get the documentation string from.")
+    ],
+) -> Annotated[str, Doc("The documentation string.")]:
     """
     Get the documentation string from the given object.
 
@@ -57,7 +77,7 @@ def get_function_schema(
         Optional[Literal["openai", "claude"]],
         Doc("The format of the schema to return"),
     ] = "openai",
-) -> Annotated[dict[str, Any], Doc("The JSON schema for the given function")]:
+) -> Annotated[FunctionSchema, Doc("The JSON schema for the given function")]:
     """
     Returns a JSON schema for the given function.
 
@@ -122,13 +142,13 @@ def get_function_schema(
             # find description in param_args tuple
             try:
                 description = next(
-                    unwrap_doc(arg)
-                    for arg in param_args if isinstance(arg, Doc)
+                    unwrap_doc(arg) for arg in param_args if isinstance(arg, Doc)
                 )
             except StopIteration:
                 try:
                     description = next(
-                        arg for arg in param_args if isinstance(arg, str))
+                        arg for arg in param_args if isinstance(arg, str)
+                    )
                 except StopIteration:
                     description = "The {name} parameter"
 
@@ -158,8 +178,7 @@ def get_function_schema(
         }
 
         if enum_ is not None:
-            schema["properties"][name]["enum"] = [
-                t for t in enum_ if t is not None]
+            schema["properties"][name]["enum"] = [t for t in enum_ if t is not None]
 
         if default_value is not inspect._empty:
             schema["properties"][name]["default"] = default_value
@@ -189,8 +208,7 @@ def get_function_schema(
 def guess_type(
     T: Annotated[type, Doc("The type to guess the JSON schema type for")],
 ) -> Annotated[
-    Union[str, list[str]], Doc(
-        "str | list of str that representing JSON schema type")
+    Union[str, list[str]], Doc("str | list of str that representing JSON schema type")
 ]:
     """Guesses the JSON schema type for the given python type."""
 

@@ -1,10 +1,13 @@
 """
 A small utility to generate JSON schemas for python functions.
 """
-from .core import get_function_schema
+from .core import get_function_schema, guess_type, Doc, Annotated
 
-__version__ = "0.4.1"
+__version__ = "0.4.2"
 __all__ = (
-    "get_function_schema",
     "__version__",
+    "get_function_schema",
+    "guess_type",
+    "Doc",
+    "Annotated",
 )
