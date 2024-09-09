@@ -1,4 +1,4 @@
-from typing import TypedDict, Literal, TypeVar, Union, Generic
+from typing import TypedDict, Literal
 
 try:
     from typing import NotRequired
@@ -37,23 +37,7 @@ class RootProperty(TypedDict):
     properties: dict[str, ParamSchema]
 
 
-T = TypeVar("T", bound=Union["WithParameters", "WithInputSchema"])
-
-
-class WithParameters(TypedDict):
-    parameters: RootProperty
-
-
-class WithInputSchema(TypedDict):
-    input_schema: RootProperty
-
-
-class FunctionSchemaBase(TypedDict):
-    name: str
-    description: str
-
-
-class FunctionSchema(FunctionSchemaBase, Generic[T]):
+class FunctionSchema(TypedDict):
     """
     Represents the schema of a function.
     Attributes:
@@ -63,8 +47,7 @@ class FunctionSchema(FunctionSchemaBase, Generic[T]):
         input_schema (ParamSchema): The schema for the function parameters if format is "claude".
     """
 
-    pass
-
-
-OpenAIFunctionSchema = FunctionSchema[WithParameters]
-ClaudeFunctionSchema = FunctionSchema[WithInputSchema]
+    name: str
+    description: str
+    parameters: NotRequired[RootProperty]
+    input_schema: NotRequired[RootProperty]
