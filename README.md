@@ -7,7 +7,7 @@
 This is a small utility to generate JSON schemas for python functions.
 With power of type annotations, it is possible to generate a schema for a function without describing it twice.
 
-At this moment, extracting schema from a function is useful for [OpenAI Assistant Toll Calling](https://platform.openai.com/docs/assistants/tools/function-calling), [OpenAI API function-call](https://platform.openai.com/docs/guides/function-calling), and [Anthropic Claude Toll calling](https://docs.anthropic.com/claude/docs/tool-use) feature.
+At this moment, extracting schema from a function is useful for [OpenAI Assistant Tool Calling](https://platform.openai.com/docs/assistants/tools/function-calling), [OpenAI API function-call](https://platform.openai.com/docs/guides/function-calling), and [Anthropic Claude Tool calling](https://docs.anthropic.com/claude/docs/tool-use) feature.
 And it can be used for other purposes for example to generate documentation in the future.
 
 ## Installation
