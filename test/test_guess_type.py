@@ -1,9 +1,9 @@
-import platform
-import packaging.version
 import typing
 
 import pytest
+
 from function_schema.core import guess_type
+from function_schema.utils import is_py310_atleast
 
 
 def test_primitive():
@@ -67,12 +67,8 @@ def test_union():
     }
 
 
-current_version = packaging.version.parse(platform.python_version())
-py_310 = packaging.version.parse("3.10")
-
-
 @pytest.mark.skipif(
-    current_version < py_310, reason="Union type is only available in Python 3.10+"
+    not is_py310_atleast(), reason="Union type is only available in Python 3.10+"
 )
 def test_union_type():
     """Test union types in Python 3.10+"""

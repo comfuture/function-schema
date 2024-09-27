@@ -1,23 +1,20 @@
 import enum
 import inspect
-import platform
-import packaging.version
 from typing import (
     Annotated,
-    Optional,
-    Union,
+    Any,
     Callable,
     Literal,
-    Any,
+    Optional,
+    Union,
     get_args,
     get_origin,
 )
+
 from .types import FunctionSchema
+from .utils import is_py310_atleast
 
-current_version = packaging.version.parse(platform.python_version())
-py_310 = packaging.version.parse("3.10")
-
-if current_version >= py_310:
+if is_py310_atleast():
     from types import UnionType
 else:
     UnionType = Union  # type: ignore
