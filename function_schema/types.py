@@ -8,6 +8,17 @@ except ImportError:
     except ImportError:
         from typing import Optional as NotRequired
 
+try:
+    from typing import Doc
+except ImportError:
+    try:
+        from typing_extensions import Doc
+    except ImportError:
+
+        class Doc:
+            def __init__(self, documentation: str, /):
+                self.documentation = documentation
+
 
 class ParamSchema(TypedDict):
     """

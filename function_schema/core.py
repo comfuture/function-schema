@@ -11,61 +11,17 @@ from typing import (
     get_origin,
 )
 
-from .types import FunctionSchema
-from .utils import is_py310_atleast
+from .types import FunctionSchema, Doc
+from .utils import unwrap_doc
 
-if is_py310_atleast():
-    from types import UnionType
-else:
-    UnionType = Union  # type: ignore
 
 try:
-    from typing import Doc
+    from types import UnionType
 except ImportError:
-    try:
-        from typing_extensions import Doc
-    except ImportError:
-
-        class Doc:
-            def __init__(self, documentation: str, /):
-                self.documentation = documentation
+    UnionType = Union  # type: ignore
 
 
 __all__ = ("get_function_schema", "guess_type", "Doc", "Annotated")
-
-
-def is_doc_meta(
-    obj: Annotated[Any, Doc("The object to be checked.")],
-) -> Annotated[
-    bool, Doc("True if the object is a documentation object, False otherwise.")
-]:
-    """
-    Check if the given object is a documentation object.
-
-    Example:
-    >>> is_doc_meta(Doc("This is a documentation object"))
-    True
-    """
-    return getattr(obj, "__class__") == Doc and hasattr(obj, "documentation")
-
-
-def unwrap_doc(
-    obj: Annotated[
-        Union[Doc, str], Doc("The object to get the documentation string from.")
-    ],
-) -> Annotated[str, Doc("The documentation string.")]:
-    """
-    Get the documentation string from the given object.
-
-    Example:
-    >>> unwrap_doc(Doc("This is a documentation object"))
-    'This is a documentation object'
-    >>> unwrap_doc("This is a documentation string")
-    'This is a documentation string'
-    """
-    if is_doc_meta(obj):
-        return obj.documentation
-    return str(obj)
 
 
 def get_function_schema(
@@ -175,7 +131,8 @@ def get_function_schema(
         }
 
         if enum_ is not None:
-            schema["properties"][name]["enum"] = [t for t in enum_ if t is not None]
+            schema["properties"][name]["enum"] = [
+                t for t in enum_ if t is not None]
 
         if default_value is not inspect._empty:
             schema["properties"][name]["default"] = default_value
@@ -205,7 +162,8 @@ def get_function_schema(
 def guess_type(
     T: Annotated[type, Doc("The type to guess the JSON schema type for")],
 ) -> Annotated[
-    Union[str, list[str]], Doc("str | list of str that representing JSON schema type")
+    Union[str, list[str]], Doc(
+        "str | list of str that representing JSON schema type")
 ]:
     """Guesses the JSON schema type for the given python type."""
 
