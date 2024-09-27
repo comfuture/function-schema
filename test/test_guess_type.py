@@ -3,7 +3,7 @@ import typing
 import pytest
 
 from function_schema.core import guess_type
-from function_schema.utils import is_py310_atleast
+from function_schema.utils import is_support_uniontype
 
 
 def test_primitive():
@@ -68,7 +68,7 @@ def test_union():
 
 
 @pytest.mark.skipif(
-    not is_py310_atleast(), reason="Union type is only available in Python 3.10+"
+    not is_support_uniontype(), reason="Union type is only available in Python 3.10+"
 )
 def test_union_type():
     """Test union types in Python 3.10+"""
