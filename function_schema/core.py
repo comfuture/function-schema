@@ -9,6 +9,7 @@ from typing import (
     Union,
     get_args,
     get_origin,
+    get_type_hints,
 )
 
 from .types import FunctionSchema, Doc
@@ -81,9 +82,15 @@ def get_function_schema(
         "properties": {},
         "required": [],
     }
+    type_hints = get_type_hints(func, include_extras=True)
     for name, param in params.items():
-        param_args = get_args(param.annotation)
-        is_annotated = get_origin(param.annotation) is Annotated
+        type_hint = type_hints.get(name)
+        if type_hint is not None:
+            param_args = get_args(type_hint)
+            is_annotated = get_origin(type_hint) is Annotated
+        else:
+            param_args = []
+            is_annotated = False
 
         enum_ = None
         default_value = inspect._empty
