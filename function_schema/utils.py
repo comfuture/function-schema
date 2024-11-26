@@ -1,4 +1,4 @@
-from typing import Annotated, Any, Union
+from typing import Annotated, Union
 from .types import Doc
 
 
@@ -9,21 +9,6 @@ def is_support_uniontype():
     except ImportError:
         return False
     return True
-
-
-def is_doc_meta(
-    obj: Annotated[Any, Doc("The object to be checked.")],
-) -> Annotated[
-    bool, Doc("True if the object is a documentation object, False otherwise.")
-]:
-    """
-    Check if the given object is a documentation object.
-
-    Example:
-    >>> is_doc_meta(Doc("This is a documentation object"))
-    True
-    """
-    return getattr(obj, "__class__") == Doc and hasattr(obj, "documentation")
 
 
 def unwrap_doc(
@@ -41,6 +26,6 @@ def unwrap_doc(
     >>> unwrap_doc("This is a documentation string")
     'This is a documentation string'
     """
-    if is_doc_meta(obj):
+    if isinstance(obj, Doc):
         return obj.documentation
     return str(obj)
