@@ -1,4 +1,4 @@
-from typing import TypedDict, Literal
+from typing import TypedDict, Literal, Protocol, runtime_checkable
 
 try:
     from typing import NotRequired
@@ -15,7 +15,10 @@ except ImportError:
         from typing_extensions import Doc
     except ImportError:
 
-        class Doc:
+        @runtime_checkable
+        class Doc(Protocol):
+            documentation: str
+
             def __init__(self, documentation: str, /):
                 self.documentation = documentation
 
