@@ -12,7 +12,7 @@ from typing import (
     get_type_hints,
 )
 
-from .types import FunctionSchema, Doc
+from .types import FunctionSchema, Doc, DocMeta
 from .utils import unwrap_doc
 
 
@@ -102,7 +102,7 @@ def get_function_schema(
             # find description in param_args tuple
             try:
                 description = next(
-                    unwrap_doc(arg) for arg in param_args if isinstance(arg, Doc)
+                    unwrap_doc(arg) for arg in param_args if isinstance(arg, DocMeta)
                 )
             except StopIteration:
                 try:

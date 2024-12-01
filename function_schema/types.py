@@ -15,12 +15,18 @@ except ImportError:
         from typing_extensions import Doc
     except ImportError:
 
-        @runtime_checkable
-        class Doc(Protocol):
+        class Doc:
             documentation: str
 
             def __init__(self, documentation: str, /):
                 self.documentation = documentation
+
+
+@runtime_checkable
+class DocMeta(Protocol):
+    """Represents the protocol for the Doc class."""
+
+    documentation: str
 
 
 class ParamSchema(TypedDict):
