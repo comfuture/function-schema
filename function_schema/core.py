@@ -12,6 +12,7 @@ from typing import (
     get_type_hints,
 )
 
+from .field import FieldInfo
 from .types import FunctionSchema, Doc, DocMeta
 from .utils import unwrap_doc
 
@@ -22,7 +23,8 @@ except ImportError:
     UnionType = Union  # type: ignore
 
 
-__all__ = ("get_function_schema", "guess_type", "Doc", "Annotated")
+__all__ = ("get_function_schema", "guess_type",
+           "Doc", "Annotated", "FieldInfo")
 
 
 def get_function_schema(
@@ -88,11 +90,19 @@ def get_function_schema(
         if type_hint is not None:
             param_args = get_args(type_hint)
             is_annotated = get_origin(type_hint) is Annotated
+
+            # process Optional type for python <= 3.9
+            if get_origin(type_hint) is Union and type(None) in param_args:
+                type_hint = next(t for t in param_args if t is not type(None))
+                param_args = get_args(type_hint)
+                is_annotated = get_origin(type_hint) is Annotated
+
         else:
             param_args = []
             is_annotated = False
 
         enum_ = None
+        field_info = {}
         default_value = inspect._empty
 
         if is_annotated:
@@ -122,6 +132,14 @@ def get_function_schema(
                 # use typing.Literal as enum if no enum found
                 get_origin(T) is Literal and get_args(T) or None,
             )
+
+            # find fieldinfo in param_args tuple
+            for arg in param_args:
+                if isinstance(arg, FieldInfo):
+                    # XXX: latest field_info will override previous ones
+                    field_info.update(arg.to_dict())
+                if isinstance(arg, dict):  # XXX: allow dict to be passed as field_info ?
+                    field_info.update(arg)
         else:
             T = param.annotation
             description = f"The {name} parameter"
@@ -135,7 +153,12 @@ def get_function_schema(
         schema["properties"][name] = {
             "type": guess_type(T),
             "description": description,  # type: ignore
+            **field_info,
         }
+
+        if "required" in field_info and field_info["required"]:
+            schema["required"].append(name)
+            del schema["properties"][name]["required"]
 
         if enum_ is not None:
             schema["properties"][name]["enum"] = [
