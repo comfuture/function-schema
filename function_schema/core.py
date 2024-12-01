@@ -90,6 +90,13 @@ def get_function_schema(
         if type_hint is not None:
             param_args = get_args(type_hint)
             is_annotated = get_origin(type_hint) is Annotated
+
+            # process Optional type for python <= 3.9
+            if get_origin(type_hint) is Union and type(None) in param_args:
+                type_hint = next(t for t in param_args if t is not type(None))
+                param_args = get_args(type_hint)
+                is_annotated = get_origin(type_hint) is Annotated
+
         else:
             param_args = []
             is_annotated = False
