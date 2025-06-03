@@ -18,54 +18,107 @@ pip install function-schema
 
 ## Usage
 
-See the [examples directory](./examples/) for comprehensive usage examples with different AI platforms:
+```python
+from typing import Annotated, Optional
+from function_schema import Doc
+import enum
+
+def get_weather(
+    city: Annotated[str, Doc("The city to get the weather for")],
+    unit: Annotated[
+        Optional[str],
+        Doc("The unit to return the temperature in"),
+        enum.Enum("Unit", "celcius fahrenheit")
+    ] = "celcius",
+) -> str:
+    """Returns the weather for the given city."""
+    return f"Weather for {city} is 20°C"
+```
+
+Function description is taken from the docstring.
+Type hinting with `typing.Annotated` for annotate additional information about the parameters and return type.
+
+Then you can generate a schema for this function:
+```python
+import json
+from function_schema import get_function_schema
+
+schema = get_function_schema(get_weather)
+print(json.dumps(schema, indent=2))
+```
+
+Will output:
+
+```json
+{
+  "name": "get_weather",
+  "description": "Returns the weather for the given city.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "city": {
+        "type": "string",
+        "description": "The city to get the weather for"
+      },
+      "unit": {
+        "type": "string",
+        "description": "The unit to return the temperature in",
+        "enum": [
+          "celcius",
+          "fahrenheit"
+        ],
+        "default": "celcius"
+      }
+    },
+  }
+  "required": [
+    "city"
+  ]
+}
+```
+
+For claude, you should pass 2nd argument as SchemaFormat.claude or `claude`:
+
+```python
+from function_schema import get_function_schema
+
+schema = get_function_schema(get_weather, "claude")
+```
+
+Please refer to the [Claude tool use](https://docs.anthropic.com/claude/docs/tool-use) documentation for more information.
+
+You can use any type hinting supported by python for the first argument of `Annotated`. including:
+`typing.Literal`, `typing.Optional`, `typing.Union`, and `T | None` for python 3.10+.  
+`Doc` class or plain string in `Annotated` is used for describe the parameter.
+
+Enumeratable candidates can be defined with `enum.Enum` in the argument of `Annotated`.
+In shorthand, you can use `typing.Literal` as the type will do the same thing:
+
+```python
+from typing import Annotated, Literal
+
+def get_animal(
+    animal: Annotated[Literal["dog", "cat"], Doc("The animal to get")],
+) -> str:
+    """Returns the animal."""
+    return f"Animal is {animal}"
+```
+
+### CLI usage
+
+```sh
+function_schema mymodule.py my_function | jq
+```
+
+### More Examples
+
+For comprehensive usage examples with different AI platforms, see the [examples directory](./examples/):
 
 - **[Basic Usage](./examples/basic_usage.py)** - Core features and function definition patterns
 - **[OpenAI Integration](./examples/openai_example.py)** - Assistant API and Chat Completion examples  
 - **[Claude Integration](./examples/claude_example.py)** - Anthropic Claude tool calling examples
 - **[MCP Integration](./examples/mcp_example.py)** - Model Context Protocol examples
 - **[CLI Usage](./examples/cli_example.py)** - Command-line interface examples
-
-### Quick Start
-
-```python
-from typing import Annotated
-from function_schema import Doc, get_function_schema
-
-def get_weather(city: Annotated[str, Doc("The city to get the weather for")]) -> str:
-    """Returns the weather for the given city."""
-    return f"Weather for {city} is 20°C"
-
-# Generate schema
-schema = get_function_schema(get_weather)
-```
-
-### Key Features
-
-- **Type Annotations**: Use `typing.Annotated` with `Doc` metadata for parameter descriptions
-- **Multiple Formats**: Support for OpenAI (`"openai"`) and Claude (`"claude"`) schema formats
-- **Enum Support**: Use `enum.Enum` or `typing.Literal` for parameter constraints
-- **CLI Tool**: Generate schemas from command line using `function_schema`
-
-For detailed examples and advanced usage patterns, see the [examples directory](./examples/).
-
-### Platform Integration
-
-#### OpenAI API
-For detailed OpenAI integration examples including Assistant API and Chat Completion, see [examples/openai_example.py](./examples/openai_example.py).
-
-#### Anthropic Claude
-For Claude tool calling examples and multi-turn conversations, see [examples/claude_example.py](./examples/claude_example.py).
-
-#### Model Context Protocol (MCP)
-For MCP server and tool integration examples, see [examples/mcp_example.py](./examples/mcp_example.py).
-
-#### CLI Usage
-Generate schemas from command line:
-```bash
-function_schema examples/cli_example.py get_weather | jq
-```
-For more CLI examples, see [examples/cli_example.py](./examples/cli_example.py).
 
 ## License
 MIT License
