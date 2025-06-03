@@ -77,7 +77,7 @@ Will output:
 }
 ```
 
-for claude, you should pass 2nd argument as SchemaFormat.claude or `claude`:
+For claude, you should pass 2nd argument as SchemaFormat.claude or `claude`:
 
 ```python
 from function_schema import get_function_schema
@@ -90,28 +90,13 @@ Please refer to the [Claude tool use](https://docs.anthropic.com/claude/docs/too
 You can use any type hinting supported by python for the first argument of `Annotated`. including:
 `typing.Literal`, `typing.Optional`, `typing.Union`, and `T | None` for python 3.10+.  
 `Doc` class or plain string in `Annotated` is used for describe the parameter.
-`Doc` metadata is the [PEP propose](https://peps.python.org/pep-0727/) for standardizing the metadata in type hints.
-currently, implemented in `typing-extensions` module. Also `function_schema.Doc` is provided for compatibility.
 
 Enumeratable candidates can be defined with `enum.Enum` in the argument of `Annotated`.
+In shorthand, you can use `typing.Literal` as the type will do the same thing:
 
 ```python
-import enum
+from typing import Annotated, Literal
 
-class AnimalType(enum.Enum):
-    dog = enum.auto()
-    cat = enum.auto()
-
-def get_animal(
-    animal: Annotated[str, Doc("The animal to get"), AnimalType],
-) -> str:
-    """Returns the animal."""
-    return f"Animal is {animal.value}"
-```
-In this example, each name of `AnimalType` enums(`dog`, `cat`) is used as an enum schema.
-In shorthand, you can use `typing.Literal` as the type will do the same thing.
-
-```python
 def get_animal(
     animal: Annotated[Literal["dog", "cat"], Doc("The animal to get")],
 ) -> str:
@@ -119,85 +104,21 @@ def get_animal(
     return f"Animal is {animal}"
 ```
 
-
-### Plain String in Annotated
-
-The string value of `Annotated` is used as a description for convenience.
-
-```python
-def get_weather(
-    city: Annotated[str, "The city to get the weather for"], # <- string value of Annotated is used as a description
-    unit: Annotated[Optional[str], "The unit to return the temperature in"] = "celcius",
-) -> str:
-    """Returns the weather for the given city."""
-    return f"Weather for {city} is 20°C"
-```
-
-But this would create a predefined meaning for any plain string inside of `Annotated`,
-and any tool that was using plain strings in them for any other purpose, which is currently allowed, would now be invalid.
-Please refer to the [PEP 0727, Plain String in Annotated](https://peps.python.org/pep-0727/#plain-string-in-annotated) for more information.
-
-### Usage with OpenAI API
-
-You can use this schema to make a function call in OpenAI API:
-```python
-import openai
-openai.api_key = "sk-..."
-
-# Create an assistant with the function
-assistant = client.beta.assistants.create(
-    instructions="You are a weather bot. Use the provided functions to answer questions.",
-    model="gpt-4-turbo-preview",
-    tools=[{
-        "type": "function",
-        "function": get_function_schema(get_weather),
-    }]
-)
-
-run = client.beta.messages.create(
-    assistant_id=assistant.id,
-    messages=[
-        {"role": "user", "content": "What's the weather like in Seoul?"}
-    ]
-)
-
-# or with chat completion
-
-result = openai.chat.completion.create(
-    model="gpt-3.5-turbo",
-    messages=[
-        {"role": "user", "content": "What's the weather like in Seoul?"}
-    ],
-    tools=[{
-      "type": "function",
-      "function": get_function_schema(get_weather)
-    }],
-    tool_call="auto",
-)
-```
-
-### Usage with Anthropic Claude
-
-```python
-import anthropic
-
-client = anthropic.Client()
-
-response = client.beta.tools.messages.create(
-    model="claude-3-opus-20240229",
-    max_tokens=4096,
-    tools=[get_function_schema(get_weather, "claude")],
-    messages=[
-        {"role": "user", "content": "What's the weather like in Seoul?"}
-    ]
-)
-```
-
 ### CLI usage
 
 ```sh
 function_schema mymodule.py my_function | jq
 ```
+
+### More Examples
+
+For comprehensive usage examples with different AI platforms, see the [examples directory](./examples/):
+
+- **[Basic Usage](./examples/basic_usage.py)** - Core features and function definition patterns
+- **[OpenAI Integration](./examples/openai_example.py)** - Assistant API and Chat Completion examples  
+- **[Claude Integration](./examples/claude_example.py)** - Anthropic Claude tool calling examples
+- **[MCP Integration](./examples/mcp_example.py)** - Model Context Protocol examples
+- **[CLI Usage](./examples/cli_example.py)** - Command-line interface examples
 
 ## License
 MIT License

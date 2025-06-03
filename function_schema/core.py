@@ -22,6 +22,15 @@ except ImportError:
     UnionType = Union  # type: ignore
 
 
+def is_optional_type(T: Any) -> bool:
+    """Check if a type annotation represents an optional/nullable type."""
+    origin = get_origin(T)
+    if origin is Union or origin is UnionType:
+        args = get_args(T)
+        return type(None) in args
+    return False
+
+
 __all__ = ("get_function_schema", "guess_type", "Doc", "Annotated")
 
 
@@ -146,7 +155,7 @@ def get_function_schema(
 
         if (
             get_origin(T) is not Literal
-            and not isinstance(None, T)
+            and not is_optional_type(T)
             and default_value is inspect._empty
         ):
             schema["required"].append(name)

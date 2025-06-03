@@ -16,6 +16,9 @@ classifiers = [
   "Development Status :: 3 - Alpha",
   "Programming Language :: Python :: 3.9",
 ]
+dependencies = [
+  "typing-extensions>=4.12.2; python_version<'3.11'"
+]
 
 [project.urls]
 Homepage = "https://github.com/comfuture/function-schema"
