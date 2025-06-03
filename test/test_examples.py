@@ -6,6 +6,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+import pytest
 
 
 def test_examples_syntax():
@@ -32,14 +33,22 @@ def test_examples_importable():
             
         # Test that the file can be imported (checks imports)
         module_name = example_file.stem
-        spec = __import__('importlib.util', fromlist=['spec_from_file_location']).spec_from_file_location(module_name, example_file)
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(module_name, example_file)
         try:
-            module = __import__('importlib.util', fromlist=['module_from_spec']).module_from_spec(spec)
-            # Don't execute the module, just load it to check imports
+            module = importlib.util.module_from_spec(spec)
+            # Execute the module to check imports (but not __main__ block)
+            old_name = module.__name__
+            module.__name__ = "__not_main__"  # Prevent __main__ block execution
+            spec.loader.exec_module(module)
+            module.__name__ = old_name
         except ImportError as e:
             # Only fail if it's importing function_schema - other imports are optional
             if "function_schema" in str(e):
                 pytest.fail(f"Import error in {example_file}: {e}")
+        except Exception as e:
+            # Other exceptions during module execution are not import issues
+            pass
 
 
 def test_cli_example_functions():
